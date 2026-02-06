@@ -119,7 +119,7 @@
             width: 0%;
             height: 100%;
             background: purple;
-            box-shadow: 0 0(15px) purple;
+            box-shadow: 0 0 15px purple;
             transition: width 0.1s linear;
         }
 
@@ -339,8 +339,8 @@
 
             /* הגדלת טקסט צה"ל */
             .card.main-side p {
-                font-size: 20px;
-                line-height: 1.4;
+                font-size: 22px;
+                line-height: 1.5;
                 font-weight: 500;
                 color: #efefef;
                 text-align: center;
@@ -510,6 +510,11 @@
                 box-shadow: 0 8px 25px rgba(128,0,255,0.2);
             }
 
+                .link-item:hover h3 {
+                    color: purple;
+                    text-shadow: 0 0 10px rgba(128,0,255,0.5);
+                }
+
         footer {
             padding: 40px;
             color: #555;
@@ -537,7 +542,7 @@
         <div class="modal-content">
             <span class="close-modal" onclick="closeModal()">✕</span>
             <div class="modal-body">
-                <h2 id="modalTitle" style="text-align:center; margin-bottom:15px; font-weight:800; padding: 0 40px;"></h2>
+                <h2 id="modalTitle" style="text-align:center; margin-bottom:15px; font-weight:800; padding: 0 45px;"></h2>
                 <div id="modalListContainer"></div>
             </div>
         </div>
@@ -584,13 +589,16 @@
         <div id="timer" style="font-size: 26px; font-weight: 800; text-align: center; margin-bottom: 20px; text-shadow: 0 0 10px purple;">מחשב זמן...</div>
         <ul class="rules-list" id="fullSchedule"></ul>
     </div>
-    <div class="links-grid" style="margin-top: 50px;">
+    <h2 class="section-title">קישורים מהירים</h2>
+    <div class="links-grid">
         <a href="https://discord.gg/epE6e2T4W8" target="_blank" class="link-item"><h3>DISCORD</h3></a>
         <a href="https://osublo3211-gif.github.io/perfectgaming-unban/?v=3" target="_blank" class="link-item"><h3>UNBAN</h3></a>
         <a href="https://my.israelgives.org/he/campaign/pgmilsim" target="_blank" class="link-item"><h3>DONATE</h3></a>
     </div>
-    <footer>© Pg - Perfect Gaming | 2026<br>נוצר על ידי Oz</footer>
-
+    <footer>
+        © Pg - Perfect Gaming | 2026<br>
+        נוצר על ידי Oz
+    </footer>
     <script>
         const pgRanks = [
             { type: "divider", label: "לוחמים" }, "חייל ארגון", "לוחם ארגון", "אחראי מחבלים", "אחראי מבצעים",
@@ -608,8 +616,14 @@
             { type: "divider", label: "משמר הגבול" }, "חייל", "חייל בכיר", "פקד", "רב-פקד", "סגן ניצב", "ניצב משנה", "תת ניצב", "ניצב",
             { type: "divider", label: "יחידת ימ\"מ" }, "רס\"מ", "רס\"ב", "סגן מפקד ימ\"מ", "מפקד ימ\"מ"
         ];
-        const alpgRanks = [{ type: "divider", label: "מערך אסטרטגי" }, "בקרוב...", "רשימת הדרגות תעודכן"];
-
+        const alpgRanks = [
+            { type: "divider", label: "דרגות טייס" },
+            "אל פיג׳י טייס",
+            "אל פיג׳י טייס בכיר",
+            { type: "divider", label: "דרגות קרקע" },
+            "אל פיג׳י קרקע",
+            "אל פיג׳י קרקע בכיר"
+        ];
         const scheduleData = [
             { h: 11, l: "אימון" }, { h: 12, l: "לחימה" }, { h: 13, l: "אימון" },
             { h: 14, l: "לחימה" }, { h: 15, l: "אימון" }, { h: 16, l: "לחימה" },
@@ -651,7 +665,15 @@
                 const h = Math.floor(diff / 3600).toString().padStart(2, '0'), m = Math.floor((diff % 3600) / 60).toString().padStart(2, '0'), s = (diff % 60).toString().padStart(2, '0');
                 timerText = `${h}:${m}:${s} עד סוף ה${currentEvent.l}`;
             } else {
-                timerText = "הפעילות הבאה בדרך...";
+                let nextEv = scheduleData.find(e => e.h > curH);
+                if (nextEv) {
+                    const target = new Date(); target.setHours(nextEv.h, 0, 0, 0);
+                    const diff = Math.floor((target - now) / 1000);
+                    const h = Math.floor(diff / 3600).toString().padStart(2, '0'), m = Math.floor((diff % 3600) / 60).toString().padStart(2, '0'), s = (diff % 60).toString().padStart(2, '0');
+                    timerText = `${h}:${m}:${s} עד ${nextEv.l}`;
+                } else {
+                    timerText = "מחשב זמן...";
+                }
             }
             document.getElementById("timer").textContent = timerText;
         }
@@ -659,47 +681,62 @@
 
         async function showPlayers() {
             const container = document.getElementById('modalListContainer');
-            document.getElementById('modalTitle').textContent = "שחקנים מחוברים";
-            container.innerHTML = "טוען...";
+            const title = document.getElementById('modalTitle');
+            title.textContent = "שחקנים מחוברים";
+            title.style.color = "#bf40ff";
+            container.innerHTML = "<p style='text-align:center;'>טוען נתונים...</p>";
             document.getElementById('mainModal').classList.add('active');
             try {
                 const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=https://servers-frontend.fivem.net/api/servers/single/9p77qb`);
                 const data = await res.json();
+                const players = data.Data.players;
+                if (!players || players.length === 0) {
+                    container.innerHTML = "<p style='text-align:center;'>אין שחקנים מחוברים.</p>";
+                    return;
+                }
                 let html = "<table>";
-                data.Data.players.forEach((p, i) => { html += `<tr class="list-row" style="animation-delay:${i * 0.03}s"><td>${p.name}</td><td style="color:purple; font-weight:800;">ID: ${p.id}</td></tr>`; });
-                html += "</table>"; container.innerHTML = html;
-            } catch (e) { container.innerHTML = "שגיאה בטעינה."; }
+                players.forEach((p, i) => { html += `<tr class="list-row" style="animation-delay:${i * 0.03}s"><td>${p.name}</td><td class="id-badge">ID: ${p.id}</td></tr>`; });
+                html += "</table>";
+                container.innerHTML = html;
+            } catch (e) { container.innerHTML = "<p style='text-align:center; color:orange;'>שגיאה בטעינה.</p>"; }
         }
 
         function openRanks(type) {
             const container = document.getElementById('modalListContainer');
+            const title = document.getElementById('modalTitle');
             let ranks, label;
             if (type === 'pg') { ranks = pgRanks; label = 'ארגון פיג׳י'; }
             else if (type === 'idf') { ranks = idfRanks; label = 'צה"ל'; }
             else { ranks = alpgRanks; label = 'ארגון אל פיג׳י'; }
-            document.getElementById('modalTitle').textContent = "דרגות " + label;
+            title.textContent = "דרגות " + label;
+            title.style.color = "#bf40ff";
             let html = "<table>";
             ranks.forEach((item, i) => {
                 const delay = i * 0.03;
-                if (typeof item === 'object') html += `<tr class="list-row" style="animation-delay:${delay}s"><td colspan="2"><div class="unit-divider">${item.label}</div></td></tr>`;
-                else html += `<tr class="list-row" style="animation-delay:${delay}s"><td style="text-align:center; padding:10px;">${item}</td></tr>`;
+                if (typeof item === 'object') { html += `<tr class="list-row" style="animation-delay:${delay}s"><td colspan="2"><div class="unit-divider">${item.label}</div></td></tr>`; }
+                else { html += `<tr class="list-row" style="animation-delay:${delay}s"><td style="text-align:center; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">${item}</td></tr>`; }
             });
-            html += "</table>"; container.innerHTML = html; document.getElementById('mainModal').classList.add('active');
+            html += "</table>";
+            container.innerHTML = html;
+            document.getElementById('mainModal').classList.add('active');
         }
 
         function openConnectModal() {
+            const container = document.getElementById('modalListContainer');
             document.getElementById('modalTitle').textContent = "אם אתה חדש צריך לקרוא את החוקים אם לא לחץ כן כדי להתחבר";
-            document.getElementById('modalListContainer').innerHTML = `
-                    <div style="display:flex; flex-direction:column; gap:15px; padding:10px;">
-                        <a href="fivem://connect/9p77qb" style="text-decoration:none;"><button class="rank-btn" style="padding:20px; font-size:18px; background:purple;">כן (התחברות)</button></a>
-                        <button class="rank-btn" style="padding:20px; font-size:18px;" onclick="openRules()">חדש (קרא חוקים)</button>
-                    </div>`;
+            document.getElementById('modalTitle').style.fontSize = "18px";
+            container.innerHTML = `
+                <div style="display:flex; flex-direction:column; gap:15px; padding:10px;">
+                    <a href="fivem://connect/9p77qb" style="text-decoration:none;"><button class="rank-btn" style="padding:20px; font-size:18px; background:purple;">כן (התחברות)</button></a>
+                    <button class="rank-btn" style="padding:20px; font-size:18px;" onclick="openRules()">חדש (קרא חוקים)</button>
+                </div>`;
             document.getElementById('mainModal').classList.add('active');
         }
 
         function openRules() {
+            const container = document.getElementById('modalListContainer');
             document.getElementById('modalTitle').textContent = "מרכז פקודות מבצע - חוקי השרת";
-            document.getElementById('modalListContainer').innerHTML = `
+            container.innerHTML = `
                 <div style="text-align:right; font-size:14px; line-height:1.6; color:white;">
                     <p style="color:#bf40ff; border-bottom:1px solid #bf40ff; margin-bottom:10px; font-weight:800; font-size:16px;">חוקי יסוד (Common Rules)</p>
                     <p><b>● RDM:</b> הרג ללא סיבה מוצדקת ורולפליי מקדים.<br><span style="color:#ff4d4d; font-weight:800;">עונש: באן במקום.</span></p>
@@ -726,30 +763,41 @@
 
         function closeModal() { document.getElementById('mainModal').classList.remove('active'); }
         async function fetchStatus() {
+            const sTxt = document.getElementById("statusTxt");
+            const pCount = document.getElementById("playerCount");
+            const dot = document.getElementById("statusDot");
             try {
                 const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=https://servers-frontend.fivem.net/api/servers/single/9p77qb`);
                 const data = await res.json();
                 if (data && data.Data) {
-                    document.getElementById("statusTxt").textContent = "ONLINE";
-                    document.getElementById("playerCount").textContent = `${data.Data.clients} / ${data.Data.sv_maxclients}`;
+                    sTxt.textContent = "ONLINE"; sTxt.style.color = "#bf40ff";
+                    dot.className = "dot";
+                    pCount.textContent = `${data.Data.clients} / ${data.Data.sv_maxclients}`;
                 }
-            } catch (e) { document.getElementById("statusTxt").textContent = "OFFLINE"; }
+            } catch (e) { sTxt.textContent = "OFFLINE"; sTxt.style.color = "#ff4d4d"; dot.className = "dot offline"; }
         }
         fetchStatus(); setInterval(fetchStatus, 45000);
-
         let prg = 0; const ivl = setInterval(() => {
-            const pBar = document.getElementById("progress"); if (!pBar) return;
+            const pBar = document.getElementById("progress");
+            if (!pBar) return;
             prg += 2; pBar.style.width = prg + "%";
             if (prg >= 100) { clearInterval(ivl); document.getElementById("intro").classList.add("intro-fade-out"); }
         }, 30);
-
         const c = document.getElementById("effectCanvas"); const ctx = c.getContext("2d");
         function resize() { c.width = window.innerWidth; c.height = window.innerHeight; }
         resize(); window.onresize = resize;
-        let particles = [...Array(80)].map(() => ({ x: Math.random() * c.width, y: Math.random() * c.height, s: Math.random() * 1 + 0.5, o: Math.random() * 0.5, color: "rgba(128, 0, 255, " }));
+        let particles = [...Array(80)].map(() => ({
+            x: Math.random() * c.width, y: Math.random() * c.height,
+            s: Math.random() * 1 + 0.5, o: Math.random() * 0.5, color: "rgba(128, 0, 255, "
+        }));
         function draw() {
             ctx.clearRect(0, 0, c.width, c.height);
-            particles.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI * 2); ctx.fillStyle = p.color + p.o + ")"; ctx.fill(); p.y -= p.s * 0.5; if (p.y < 0) p.y = c.height; });
+            particles.forEach(p => {
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI * 2);
+                ctx.fillStyle = p.color + p.o + ")"; ctx.fill();
+                p.y -= p.s * 0.5;
+                if (p.y < 0) { p.y = c.height; p.x = Math.random() * c.width; }
+            });
             requestAnimationFrame(draw);
         }
         draw();
